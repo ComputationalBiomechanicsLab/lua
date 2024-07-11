@@ -61,6 +61,10 @@ target_include_directories(lua INTERFACE
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# add `luac` optional binary (handy for checking if `lua` can be linked etc.)
+add_executable(luac EXCLUDE_FROM_ALL src/luac.c src/print.c)
+target_link_libraries(luac lua)
+
 # install the `lua` binaries (to the binary dir) and the headers to the
 # installed header dir
 if(TRUE)
