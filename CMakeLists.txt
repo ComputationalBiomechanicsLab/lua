@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(lua VERSION 5.1.5 LANGUAGES C)
+project(lua VERSION 5.1.5)
 
 include(GNUInstallDirs) # CMAKE_INSTALL_LIBDIR, _INCLUDEDIR, etc.
 include(CMakePackageConfigHelpers)  # configure_package_config_file
@@ -47,6 +47,7 @@ add_library(lua STATIC
     # library components
     src/lauxlib.c
     src/lauxlib.h
+    src/lbaselib.c
     src/ldblib.c
     src/liolib.c
     src/lmathlib.c
@@ -56,22 +57,34 @@ add_library(lua STATIC
     src/loadlib.c
     src/linit.c
 )
+# mark the files as C++ inputs, so the compiler emits exceptions instead of
+# long jumps for errors
+file(GLOB_RECURSE CFILES "${CMAKE_SOURCE_DIR}/src/*.c")
+set_source_files_properties(${CFILES} PROPERTIES LANGUAGE CXX)
 target_include_directories(lua INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/lua>
+)
+set_target_properties(lua PROPERTIES
+    LANGUAGE CXX
+    LINKER_LANGUAGE CXX
 )
 
 # add `luac` optional binary (handy for checking if `lua` can be linked etc.)
 add_executable(luac EXCLUDE_FROM_ALL src/luac.c src/print.c)
 target_link_libraries(luac lua)
+set_target_properties(luac PROPERTIES
+    LANGUAGE CXX
+    LINKER_LANGUAGE CXX
+)
 
 # install the `lua` binaries (to the binary dir) and the headers to the
 # installed header dir
 if(TRUE)
     install(TARGETS lua EXPORT luaTargets)
     install(
-        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/src/
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/lua/
         FILES_MATCHING PATTERN "*.h"
     )
 endif()
